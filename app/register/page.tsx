@@ -1,13 +1,53 @@
 'use client';
 
+import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-const handleRegister = async (email: string, password: string) => {
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
+export default function RegisterPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
 
-  if (error) alert(error.message);
-  else alert('Check your email for confirmation');
-};
+  const handleRegister = async () => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert('Registration successful! You can login now.');
+    router.push('/login');
+  };
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>Register</h1>
+
+      <input
+        type="email"
+        placeholder="Email"
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <br /><br />
+
+      <input
+        type="password"
+        placeholder="Password"
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <br /><br />
+
+      <button onClick={handleRegister}>Register</button>
+
+      <p>
+        Already have an account? <Link href="/login">Login</Link>
+      </p>
+    </div>
+  );
+}
