@@ -1,79 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query } from '@/lib/db'
+import { supabase } from '@/lib/supabaseClient'
 
 export async function GET(req: NextRequest) {
   try {
     // Get all garbage reports with location
-    const reportsResult = await query(`
-      SELECT 
-        id,
-        title,
-        latitude,
-        longitude,
-        status,
-        priority,
-        created_at,
-        'report' as type
-      FROM reports
-      WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-      ORDER BY created_at DESC
-      LIMIT 100
-    `)
+    const { data: reports, error: reportsError } = await supabase
+      .from('reports')
+      .select('*')
+      .not('latitude', 'is', null)
+      .not('longitude', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (reportsError) throw reportsError
 
     // Get all garbage bins with fill level
-    const binsResult = await query(`
-      SELECT 
-        id,
-        bin_name as name,
-        latitude,
-        longitude,
-        fill_level_percentage as fill_level,
-        status,
-        capacity_liters,
-        'bin' as type
-      FROM garbage_bins
-      ORDER BY fill_level_percentage DESC
-    `)
+    const { data: bins, error: binsError } = await supabase
+      .from('garbage_bins')
+      .select('*')
+      .order('fill_level_percentage', { ascending: false })
+
+    if (binsError) throw binsError
 
     // Get all active vehicles with location
-    const vehiclesResult = await query(`
-      SELECT 
-        id,
-        latitude,
-        longitude,
-        status,
-        current_load_liters as current_load,
-        capacity_liters as capacity,
-        'vehicle' as type
-      FROM vehicles
-      WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-    `)
+    const { data: vehicles, error: vehiclesError } = await supabase
+      .from('vehicles')
+      .select('*')
+      .not('latitude', 'is', null)
+      .not('longitude', 'is', null)
+
+    if (vehiclesError) throw vehiclesError
 
     // Get all active CCTV cameras
-    const cameraResult = await query(`
-      SELECT 
-        id,
-        camera_name as name,
-        latitude,
-        longitude,
-        status,
-        detection_count,
-        'camera' as type
-      FROM cctv_cameras
-      WHERE status = 'active'
-    `)
+    const { data: cameras, error: camerasError } = await supabase
+      .from('cctv_cameras')
+      .select('*')
+      .eq('status', 'active')
+
+    if (camerasError) throw camerasError
 
     const locations = {
-      reports: reportsResult.rows,
-      bins: binsResult.rows,
-      vehicles: vehiclesResult.rows,
-      cameras: cameraResult.rows,
+      reports: reports || [],
+      bins: bins || [],
+      vehicles: vehicles || [],
+      cameras: cameras || [],
       timestamp: new Date().toISOString(),
     }
 
     return NextResponse.json(locations, { status: 200 })
   } catch (error) {
-    console.error('Map locations error:', error)
+    console.error('[v0] Map locations error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch locations' },
       { status: 500 }

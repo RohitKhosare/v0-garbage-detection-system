@@ -6,8 +6,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useAuth } from "@/components/auth-system"
 import Link from "next/link"
+import { supabase } from "@/lib/supabaseClient"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -18,7 +18,6 @@ export default function RegisterPage() {
   })
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const { register } = useAuth()
   const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -31,10 +30,27 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      await register(formData.email, formData.password, formData.name, formData.role)
-      router.push("/")
-    } catch (err) {
-      setError("Registration failed. Please try again.")
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+            role: formData.role,
+          },
+        },
+      })
+
+      if (authError) {
+        throw new Error(authError.message)
+      }
+
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user))
+        router.push("/login")
+      }
+    } catch (err: any) {
+      setError(err.message || "Registration failed. Please try again.")
     } finally {
       setIsLoading(false)
     }
