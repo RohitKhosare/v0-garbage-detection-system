@@ -1,389 +1,199 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Camera, MapPin, Upload, X, CheckCircle, AlertTriangle, Loader2 } from "lucide-react"
-import Image from "next/image"
-
-interface LocationData {
-  latitude: number
-  longitude: number
-  address?: string
-}
-
-interface ReportData {
-  name: string
-  contact: string
-  description: string
-  location: LocationData | null
-  photos: File[]
-  videos: File[]
-}
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default function ReportPage() {
-  const [reportData, setReportData] = useState<ReportData>({
-    name: "",
-    contact: "",
-    description: "",
-    location: null,
-    photos: [],
-    videos: [],
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isGettingLocation, setIsGettingLocation] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
-  const [previewUrls, setPreviewUrls] = useState<string[]>([])
-
+  const [user, setUser] = useState<any>(null)
+  const [location, setLocation] = useState('')
+  const [latitude, setLatitude] = useState(0)
+  const [longitude, setLongitude] = useState(0)
+  const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
+  const [category, setCategory] = useState('garbage')
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const router = useRouter()
+  const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const videoInputRef = useRef<HTMLInputElement>(null)
 
-  const getCurrentLocation = async () => {
-    setIsGettingLocation(true)
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-        })
-      })
-
-      const { latitude, longitude } = position.coords
-
-      // Simulate reverse geocoding (in real app, use Google Maps API)
-      const address = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-
-      setReportData((prev) => ({
-        ...prev,
-        location: { latitude, longitude, address },
-      }))
-    } catch (error) {
-      console.error("Error getting location:", error)
-      alert("Unable to get your location. Please enable location services and try again.")
-    } finally {
-      setIsGettingLocation(false)
-    }
-  }
-
-  const handleFileUpload = (files: FileList | null, type: "photos" | "videos") => {
-    if (!files) return
-
-    const fileArray = Array.from(files)
-    const validFiles = fileArray.filter((file) => {
-      if (type === "photos") {
-        return file.type.startsWith("image/")
-      } else {
-        return file.type.startsWith("video/")
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login')
+        return
       }
-    })
-
-    if (type === "photos") {
-      setReportData((prev) => ({
-        ...prev,
-        photos: [...prev.photos, ...validFiles],
-      }))
-
-      // Create preview URLs
-      const newPreviewUrls = validFiles.map((file) => URL.createObjectURL(file))
-      setPreviewUrls((prev) => [...prev, ...newPreviewUrls])
-    } else {
-      setReportData((prev) => ({
-        ...prev,
-        videos: [...prev.videos, ...validFiles],
-      }))
+      setUser(user)
+      // Get current location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          setLatitude(pos.coords.latitude)
+          setLongitude(pos.coords.longitude)
+        })
+      }
     }
-  }
+    checkUser()
+  }, [])
 
-  const removeFile = (index: number, type: "photos" | "videos") => {
-    if (type === "photos") {
-      // Revoke the preview URL to prevent memory leaks
-      URL.revokeObjectURL(previewUrls[index])
-      setPreviewUrls((prev) => prev.filter((_, i) => i !== index))
-      setReportData((prev) => ({
-        ...prev,
-        photos: prev.photos.filter((_, i) => i !== index),
-      }))
-    } else {
-      setReportData((prev) => ({
-        ...prev,
-        videos: prev.videos.filter((_, i) => i !== index),
-      }))
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImage(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-    setSubmitStatus("idle")
+    if (!image) {
+      alert('Please select an image')
+      return
+    }
+
+    setLoading(true)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Upload image to Supabase Storage
+      const fileName = `${Date.now()}-${image.name}`
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from('garbage-images')
+        .upload(fileName, image)
 
-      // In real implementation, upload files and submit data to backend
-      console.log("Submitting report:", reportData)
+      if (storageError) throw storageError
 
-      setSubmitStatus("success")
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('garbage-images')
+        .getPublicUrl(fileName)
 
-      // Reset form after successful submission
-      setTimeout(() => {
-        setReportData({
-          name: "",
-          contact: "",
-          description: "",
-          location: null,
-          photos: [],
-          videos: [],
+      // Save report to database
+      const { error: dbError } = await supabase
+        .from('reports')
+        .insert({
+          user_id: user.id,
+          image_url: publicUrl,
+          location,
+          latitude,
+          longitude,
+          category,
+          status: 'pending',
         })
-        setPreviewUrls([])
-        setSubmitStatus("idle")
-      }, 3000)
-    } catch (error) {
-      console.error("Error submitting report:", error)
-      setSubmitStatus("error")
+
+      if (dbError) throw dbError
+
+      setSuccess(true)
+      setImage(null)
+      setImagePreview('')
+      setLocation('')
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)
+    } catch (error: any) {
+      alert('Error: ' + error.message)
     } finally {
-      setIsSubmitting(false)
+      setLoading(false)
     }
   }
 
-  const isFormValid =
-    reportData.name &&
-    reportData.description &&
-    reportData.location &&
-    (reportData.photos.length > 0 || reportData.videos.length > 0)
+  if (!user) return <div className="p-8">Loading...</div>
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">Report Garbage</h1>
-          <p className="text-muted-foreground">Help keep our city clean by reporting garbage issues in your area</p>
-        </div>
-
-        {/* Success/Error Messages */}
-        {submitStatus === "success" && (
-          <Alert className="border-green-200 bg-green-50">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
-              Report submitted successfully! Municipal authorities have been notified.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {submitStatus === "error" && (
-          <Alert className="border-red-200 bg-red-50">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">Failed to submit report. Please try again.</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Report Form */}
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Garbage Report Details</CardTitle>
-            <CardDescription>
-              Please provide as much detail as possible to help us address the issue quickly
-            </CardDescription>
+            <CardTitle>Report Garbage Location</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Personal Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    value={reportData.name}
-                    onChange={(e) => setReportData((prev) => ({ ...prev, name: e.target.value }))}
-                    placeholder="Your full name"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact">Contact (Optional)</Label>
-                  <Input
-                    id="contact"
-                    value={reportData.contact}
-                    onChange={(e) => setReportData((prev) => ({ ...prev, contact: e.target.value }))}
-                    placeholder="Phone or email"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Category</label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="garbage">General Garbage</SelectItem>
+                    <SelectItem value="plastic">Plastic Waste</SelectItem>
+                    <SelectItem value="organic">Organic Waste</SelectItem>
+                    <SelectItem value="hazardous">Hazardous Waste</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  value={reportData.description}
-                  onChange={(e) => setReportData((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe the garbage issue (type, amount, location details, etc.)"
-                  rows={4}
+              <div>
+                <label className="block text-sm font-medium mb-2">Location Description</label>
+                <Input
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g., Near the park entrance"
                   required
                 />
               </div>
 
-              {/* Location */}
-              <div className="space-y-4">
-                <Label>Location *</Label>
-                <div className="flex items-center gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={getCurrentLocation}
-                    disabled={isGettingLocation}
-                    className="flex items-center gap-2 bg-transparent"
-                  >
-                    {isGettingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-                    {isGettingLocation ? "Getting Location..." : "Get Current Location"}
-                  </Button>
-                  {reportData.location && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      Location Captured
-                    </Badge>
-                  )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Latitude</label>
+                  <Input
+                    type="number"
+                    value={latitude}
+                    onChange={(e) => setLatitude(parseFloat(e.target.value))}
+                    step="0.0001"
+                  />
                 </div>
-                {reportData.location && (
-                  <div className="p-3 bg-muted rounded-lg text-sm">
-                    <p className="font-medium">Coordinates:</p>
-                    <p>{reportData.location.address}</p>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Longitude</label>
+                  <Input
+                    type="number"
+                    value={longitude}
+                    onChange={(e) => setLongitude(parseFloat(e.target.value))}
+                    step="0.0001"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Upload Image</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Choose Image
+                </Button>
+                {imagePreview && (
+                  <img src={imagePreview} alt="Preview" className="mt-4 rounded-lg max-h-64" />
                 )}
               </div>
 
-              {/* Photo Upload */}
-              <div className="space-y-4">
-                <Label>Photos *</Label>
-                <div className="space-y-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full flex items-center gap-2"
-                  >
-                    <Camera className="w-4 h-4" />
-                    Add Photos
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => handleFileUpload(e.target.files, "photos")}
-                    className="hidden"
-                  />
-
-                  {previewUrls.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {previewUrls.map((url, index) => (
-                        <div key={index} className="relative group">
-                          <Image
-                            src={url || "/placeholder.svg"}
-                            alt={`Preview ${index + 1}`}
-                            width={200}
-                            height={150}
-                            className="w-full h-32 object-cover rounded-lg border"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeFile(index, "photos")}
-                            className="absolute top-2 right-2 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              {success && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-700">
+                  Report submitted successfully! Redirecting...
                 </div>
-              </div>
+              )}
 
-              {/* Video Upload */}
-              <div className="space-y-4">
-                <Label>Videos (Optional)</Label>
-                <div className="space-y-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => videoInputRef.current?.click()}
-                    className="w-full flex items-center gap-2"
-                  >
-                    <Upload className="w-4 h-4" />
-                    Add Videos
-                  </Button>
-                  <input
-                    ref={videoInputRef}
-                    type="file"
-                    accept="video/*"
-                    multiple
-                    onChange={(e) => handleFileUpload(e.target.files, "videos")}
-                    className="hidden"
-                  />
-
-                  {reportData.videos.length > 0 && (
-                    <div className="space-y-2">
-                      {reportData.videos.map((video, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                          <span className="text-sm font-medium">{video.name}</span>
-                          <Button type="button" variant="ghost" size="sm" onClick={() => removeFile(index, "videos")}>
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <Button type="submit" disabled={!isFormValid || isSubmitting} className="w-full" size="lg">
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Submitting Report...
-                  </>
-                ) : (
-                  "Submit Report"
-                )}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Uploading...' : 'Submit Report'}
               </Button>
             </form>
-          </CardContent>
-        </Card>
-
-        {/* Guidelines */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Reporting Guidelines</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-              <p>Take clear photos showing the garbage and surrounding area</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-              <p>Enable location services for accurate positioning</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-              <p>Provide detailed descriptions to help cleanup crews</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-              <p>Reports are reviewed within 2 hours during business days</p>
-            </div>
           </CardContent>
         </Card>
       </div>
