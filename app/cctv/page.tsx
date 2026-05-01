@@ -354,8 +354,49 @@ export default function CCTVPage() {
             </CardContent>
           </Card>
 
-          {/* Camera Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Mobile Camera Connection Instructions */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Camera className="w-5 h-5 text-blue-600" />
+                How to Connect Your Mobile Camera
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Step 1: Download App</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Download <strong>IP Webcam</strong> (Android) or <strong>Codeshot</strong> (iOS) from your app store
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Step 2: Get Stream URL</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Open the app, enable streaming, and copy the HTTP URL (e.g., http://192.168.x.x:8080)
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Step 3: Add to Dashboard</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Click "Add Mobile Camera" button below and paste your stream URL
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-3 border">
+                <p className="text-sm font-mono text-gray-600">
+                  Example URL: http://192.168.0.100:8080/video
+                </p>
+              </div>
+              <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                <Camera className="w-4 h-4 mr-2" />
+                Add Mobile Camera
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Camera Grid - Single Column for Mobile */}
+          <div className="grid grid-cols-1 gap-6">
             {filteredCameras.map((camera) => (
               <Card key={camera.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
