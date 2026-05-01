@@ -146,6 +146,7 @@ const mockDetections: Detection[] = [
 ]
 
 export default function CCTVPage() {
+  const [mounted, setMounted] = useState(false)
   const [cameras, setCameras] = useState<CCTVCamera[]>(mockCameras)
   const [detections, setDetections] = useState<Detection[]>(mockDetections)
   const [searchTerm, setSearchTerm] = useState("")
@@ -153,6 +154,11 @@ export default function CCTVPage() {
   const [zoneFilter, setZoneFilter] = useState<string>("all")
   const [selectedCamera, setSelectedCamera] = useState<CCTVCamera | null>(null)
   const [isLiveView, setIsLiveView] = useState(false)
+
+  // Mount guard
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Simulate real-time updates
   useEffect(() => {
@@ -233,6 +239,14 @@ export default function CCTVPage() {
   const totalDetections = detections.length
   const newDetections = detections.filter((d) => d.status === "new").length
   const aiEnabledCameras = cameras.filter((c) => c.aiEnabled).length
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Loading CCTV feeds...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
