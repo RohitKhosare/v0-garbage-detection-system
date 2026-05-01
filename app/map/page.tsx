@@ -1,11 +1,13 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { AlertTriangle, MapPin, Truck, Camera, Search, RefreshCw } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/utils/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { AlertTriangle, MapPin, Truck, Camera, Search, RefreshCw } from 'lucide-react'
 
 interface Location {
   id: string
@@ -16,62 +18,104 @@ interface Location {
   title?: string
   fill_level?: number
   current_load?: number
+  image_url?: string
+  location?: string
+}
+
+interface Report {
+  id: string
+  location: string
+  latitude: number
+  longitude: number
+  status: string
+  image_url: string
+  created_at: string
 }
 
 export default function MapPage() {
+  const [user, setUser] = useState<any>(null)
   const [locations, setLocations] = useState<Location[]>([])
   const [filteredLocations, setFilteredLocations] = useState<Location[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
-  const [typeFilter, setTypeFilter] = useState("all")
+  const [error, setError] = useState('')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
+  const router = useRouter()
+  const supabase = createClient()
 
-  // Sample Indian locations for demo
-  const sampleLocations: Location[] = [
-    { id: "report-1", latitude: 28.6139, longitude: 77.2090, type: "report", status: "active", title: "Delhi - Connaught Place" },
-    { id: "report-2", latitude: 28.4595, longitude: 77.1188, type: "report", status: "in-progress", title: "Delhi - Airport Area" },
-    { id: "vehicle-1", latitude: 28.5244, longitude: 77.1855, type: "vehicle", status: "in-progress", title: "GC-001 Truck" },
-    { id: "vehicle-2", latitude: 28.6300, longitude: 77.2200, type: "vehicle", status: "idle", title: "GC-002 Truck" },
-    { id: "bin-1", latitude: 28.6273, longitude: 77.2055, type: "bin", status: "active", fill_level: 75 },
-    { id: "bin-2", latitude: 28.5244, longitude: 77.1855, type: "bin", status: "active", fill_level: 45 },
-    { id: "camera-1", latitude: 28.6332, longitude: 77.2197, type: "camera", status: "active", title: "CCTV-001" },
-  ]
-
-  // Fetch real-time locations
+  // Fetch real-time locations from Supabase
   useEffect(() => {
     const fetchLocations = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login')
+        return
+      }
+      setUser(user)
+
       try {
         setLoading(true)
-        const response = await fetch("/api/map/locations")
-        
-        if (!response.ok) {
-          // Use sample data if API fails
-          setLocations(sampleLocations)
-        } else {
-          const data = await response.json()
-          
-          // Combine all location types
-          const combined = [
-            ...(data.reports || []).map((r: any) => ({ ...r, type: "report" })),
-            ...(data.bins || []).map((b: any) => ({ ...b, type: "bin" })),
-            ...(data.vehicles || []).map((v: any) => ({ ...v, type: "vehicle" })),
-            ...(data.cameras || []).map((c: any) => ({ ...c, type: "camera" })),
-          ]
-          
-          setLocations(combined.length > 0 ? combined : sampleLocations)
+        const { data: reports } = await supabase
+          .from('reports')
+          .select('*')
+          .order('created_at', { ascending: false })
+
+        if (reports) {
+          const combined: Location[] = reports.map((r: Report) => ({
+            id: r.id,
+            latitude: r.latitude,
+            longitude: r.longitude,
+            type: 'report',
+            status: r.status,
+            title: r.location,
+            image_url: r.image_url,
+            location: r.location,
+          }))
+
+          setLocations(combined)
         }
-        setError("")
+        setError('')
       } catch (err) {
-        console.error("Failed to fetch locations:", err)
-        setLocations(sampleLocations)
+        console.error('[v0] Failed to fetch locations:', err)
+        setError('Failed to fetch locations')
       } finally {
         setLoading(false)
       }
     }
 
     fetchLocations()
-    const interval = setInterval(fetchLocations, 5000) // Refresh every 5 seconds
-    return () => clearInterval(interval)
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('reports')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'reports' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newReport = payload.new as Report
+            setLocations((prev) => [
+              {
+                id: newReport.id,
+                latitude: newReport.latitude,
+                longitude: newReport.longitude,
+                type: 'report',
+                status: newReport.status,
+                title: newReport.location,
+                image_url: newReport.image_url,
+                location: newReport.location,
+              },
+              ...prev,
+            ])
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
   }, [])
 
   // Filter locations based on search and type
@@ -122,10 +166,10 @@ export default function MapPage() {
   }
 
   const stats = {
-    activeReports: locations.filter(l => l.type === "report" && l.status === "active").length,
-    inProgress: locations.filter(l => l.type === "report" && l.status === "in-progress").length,
-    activeVehicles: locations.filter(l => l.type === "vehicle" && l.status === "in-progress").length,
-    cameras: locations.filter(l => l.type === "camera").length,
+    activeReports: locations.filter(l => l.type === 'report' && l.status === 'pending').length,
+    inProgress: locations.filter(l => l.type === 'report' && l.status === 'in-progress').length,
+    activeVehicles: locations.filter(l => l.type === 'vehicle').length,
+    cameras: locations.filter(l => l.type === 'camera').length,
   }
 
   return (
@@ -235,6 +279,7 @@ export default function MapPage() {
                   <div
                     key={location.id}
                     className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition"
+                    onClick={() => setSelectedReport(location as unknown as Report)}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`${getStatusColor(location.status)} w-3 h-3 rounded-full mt-1.5 flex-shrink-0`}></div>
@@ -243,16 +288,6 @@ export default function MapPage() {
                         <p className="text-xs text-muted-foreground">
                           {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
                         </p>
-                        {location.fill_level && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Fill: {location.fill_level}%
-                          </p>
-                        )}
-                        {location.current_load && (
-                          <p className="text-xs text-muted-foreground">
-                            Load: {location.current_load}%
-                          </p>
-                        )}
                       </div>
                       <Badge variant="outline" className="text-xs flex-shrink-0">
                         {location.status}
@@ -277,26 +312,14 @@ export default function MapPage() {
                 <div className="text-center space-y-4">
                   <MapPin className="w-16 h-16 text-muted-foreground mx-auto" />
                   <div>
-                    <h3 className="text-lg font-medium">Interactive Map</h3>
+                    <h3 className="text-lg font-medium">Live Garbage Locations</h3>
                     <p className="text-muted-foreground text-sm">
-                      {loading ? "Loading map data..." : `Displaying ${filteredLocations.length} locations`}
+                      {loading ? 'Loading map data...' : `Displaying ${filteredLocations.length} reports`}
                     </p>
+                    {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
                     <p className="text-xs text-muted-foreground mt-2 max-w-sm">
-                      Integration with OpenStreetMap (Leaflet.js) or Google Maps API will display interactive map with real-time vehicle tracking, garbage locations, and camera feeds across Indian cities.
+                      Real-time garbage detection reports with latitude/longitude coordinates from Supabase database.
                     </p>
-                    
-                    {/* Quick Location Links */}
-                    <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                      <Button size="sm" variant="outline">
-                        📍 Delhi (28.61°N, 77.21°E)
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        📍 Mumbai (19.08°N, 72.88°E)
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        📍 Bangalore (12.97°N, 77.59°E)
-                      </Button>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -304,13 +327,53 @@ export default function MapPage() {
               {/* API Status */}
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm">
-                  <strong>API Status:</strong> {loading ? "Fetching..." : "Connected"} • 
-                  <strong className="ml-2">Locations:</strong> {locations.length} total • 
-                  <strong className="ml-2">Updates:</strong> Every 5 seconds
+                  <strong>Supabase Status:</strong> {loading ? 'Fetching...' : 'Connected'} • 
+                  <strong className="ml-2">Reports:</strong> {locations.length} total • 
+                  <strong className="ml-2">Updates:</strong> Real-time
                 </p>
               </div>
             </CardContent>
           </Card>
+
+          {/* Selected Report Details */}
+          {selectedReport && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>{selectedReport.location}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    {selectedReport.image_url && (
+                      <img
+                        src={selectedReport.image_url}
+                        alt="Report"
+                        className="rounded-lg max-h-64 w-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Coordinates</p>
+                      <p className="font-semibold">
+                        {selectedReport.latitude.toFixed(4)}, {selectedReport.longitude.toFixed(4)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Status</p>
+                      <Badge>{selectedReport.status}</Badge>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Reported</p>
+                      <p className="font-semibold">
+                        {new Date(selectedReport.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
