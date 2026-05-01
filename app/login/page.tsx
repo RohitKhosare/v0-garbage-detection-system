@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -81,23 +81,6 @@ export default function LoginPage() {
     </div>
   )
 }
-
-    router.push('/dashboard');
-  };
-
-  return (
-    <div style={{ padding: '20px' }}>
-      <h1>Login to CleanCity AI</h1>
-      <p>Secure login powered by Supabase Authentication</p>
-
-      <input
-        type="email"
-        placeholder="Email"
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <br /><br />
-
-      <input
         type="password"
         placeholder="Password"
         onChange={(e) => setPassword(e.target.value)}

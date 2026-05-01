@@ -25,16 +25,8 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session if exists
-  const { data: { session } } = await supabase.auth.getSession()
-
-  // Protect routes
-  if (!session && (request.nextUrl.pathname.startsWith('/dashboard') || 
-                    request.nextUrl.pathname.startsWith('/report') ||
-                    request.nextUrl.pathname.startsWith('/map') ||
-                    request.nextUrl.pathname.startsWith('/cctv'))) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+  // Refresh session
+  await supabase.auth.getSession()
 
   return response
 }

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { createClient } from '@/utils/supabase/server'
 
 export async function GET(req: NextRequest) {
   try {
+    const supabase = await createClient()
+    
     // Get all garbage reports with location
     const { data: reports, error: reportsError } = await supabase
       .from('reports')
