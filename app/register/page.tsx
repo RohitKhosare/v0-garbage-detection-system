@@ -76,16 +76,34 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="citizen">Citizen (Report garbage)</SelectItem>
-                <SelectItem value="officer">Municipal Officer (Manage reports)</SelectItem>
-                <SelectItem value="collector">Garbage Collector (Collect waste)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Select Your Role</label>
+              <Select value={role} onValueChange={setRole}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="citizen">
+                    <div className="flex flex-col">
+                      <span>Citizen - Report Garbage</span>
+                      <span className="text-xs text-gray-500">Report and track garbage locations</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="municipal">
+                    <div className="flex flex-col">
+                      <span>Municipal Coordinator</span>
+                      <span className="text-xs text-gray-500">Manage city-wide operations</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="collector">
+                    <div className="flex flex-col">
+                      <span>Garbage Collector</span>
+                      <span className="text-xs text-gray-500">Collect waste and complete tasks</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Creating account...' : 'Register'}
