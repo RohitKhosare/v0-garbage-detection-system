@@ -81,17 +81,3 @@ export default function LoginPage() {
     </div>
   )
 }
-        type="password"
-        placeholder="Password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br /><br />
-
-      <button onClick={handleLogin}>Login</button>
-
-      <p>
-        Don’t have an account? <Link href="/register">Register</Link>
-      </p>
-    </div>
-  );
-}
