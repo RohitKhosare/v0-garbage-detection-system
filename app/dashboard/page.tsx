@@ -55,7 +55,21 @@ export default function DashboardPage() {
     router.push('/login')
   }
 
-  if (loading) return <div className="p-8">Loading...</div>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Redirecting...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -63,7 +77,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-green-600">CleanCity AI</h1>
           <div className="flex items-center gap-4">
-            <span className="text-gray-600">{user?.email}</span>
+            <span className="text-gray-600">{user.email}</span>
             <Button variant="outline" onClick={handleLogout}>
               Logout
             </Button>

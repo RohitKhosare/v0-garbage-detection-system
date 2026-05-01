@@ -116,53 +116,28 @@ export default function MapPage() {
     return () => {
       channel.unsubscribe()
     }
+  }, [router])
+
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
   }, [])
 
-  // Filter locations based on search and type
-  useEffect(() => {
-    let filtered = locations
-
-    if (typeFilter !== "all") {
-      filtered = filtered.filter(loc => loc.type === typeFilter)
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(loc =>
-        (loc.title || "").toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-
-    setFilteredLocations(filtered)
-  }, [locations, searchTerm, typeFilter])
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-red-500"
-      case "in-progress":
-        return "bg-yellow-500"
-      case "resolved":
-        return "bg-green-500"
-      case "idle":
-        return "bg-blue-500"
-      default:
-        return "bg-gray-500"
-    }
+  if (!mounted || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Loading map...</p>
+      </div>
+    )
   }
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "report":
-        return <AlertTriangle className="w-4 h-4" />
-      case "vehicle":
-        return <Truck className="w-4 h-4" />
-      case "camera":
-        return <Camera className="w-4 h-4" />
-      case "bin":
-        return <MapPin className="w-4 h-4" />
-      default:
-        return <MapPin className="w-4 h-4" />
-    }
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Redirecting...</p>
+      </div>
+    )
   }
 
   const stats = {
