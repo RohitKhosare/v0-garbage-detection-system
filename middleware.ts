@@ -26,7 +26,21 @@ export async function middleware(request: NextRequest) {
   )
 
   // Refresh session
-  await supabase.auth.getSession()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  // Protect routes - redirect to login if not authenticated
+  const publicRoutes = ['/login', '/register']
+  const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname === route)
+
+  // If user is not authenticated and trying to access protected route
+  if (!session && !isPublicRoute) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // If user is authenticated and trying to access login/register
+  if (session && isPublicRoute) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
 
   return response
 }

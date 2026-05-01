@@ -22,7 +22,15 @@ export default function ReportPage() {
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [mounted, setMounted] = useState(false)
+
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
@@ -39,7 +47,7 @@ export default function ReportPage() {
       }
     }
     checkUser()
-  }, [])
+  }, [mounted, router])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -105,7 +113,13 @@ export default function ReportPage() {
     }
   }
 
-  if (!user) return <div className="p-8">Loading...</div>
+  if (!mounted || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
