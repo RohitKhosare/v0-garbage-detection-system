@@ -79,15 +79,7 @@ function FloatingOrbs() {
 
 function CleaningWavesBackgroundInner() {
   return (
-    <div className="absolute inset-0 -z-10 opacity-30">
-      <Canvas camera={{ position: [0, 0, 30], fov: 60 }} style={{ background: 'transparent' }}>
-        <WavesMesh />
-        <FloatingOrbs />
-        <ambientLight intensity={0.3} />
-        <pointLight position={[15, 15, 15]} intensity={1} color="#7BBDE8" />
-        <pointLight position={[-15, -15, -15]} intensity={0.8} color="#0A4174" />
-      </Canvas>
-    </div>
+    <div className="absolute inset-0 -z-10 opacity-30 bg-gradient-to-tr from-blue-mid/20 to-blue-lighter/10" />
   )
 }
 

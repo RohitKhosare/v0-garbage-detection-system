@@ -99,14 +99,7 @@ function PulsingCubes() {
 
 function CityGridBackgroundInner() {
   return (
-    <div className="absolute inset-0 -z-10 opacity-40">
-      <Canvas camera={{ position: [0, 0, 25], fov: 60 }} style={{ background: 'transparent' }}>
-        <GridMesh />
-        <PulsingCubes />
-        <ambientLight intensity={0.2} />
-        <pointLight position={[20, 20, 20]} intensity={0.6} color="#7BBDE8" />
-      </Canvas>
-    </div>
+    <div className="absolute inset-0 -z-10 opacity-40 bg-gradient-to-b from-blue-sky/20 to-blue-mid/10" />
   )
 }
 

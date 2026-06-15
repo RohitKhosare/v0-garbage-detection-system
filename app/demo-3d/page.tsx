@@ -1,25 +1,20 @@
 'use client'
 
-import { useState, Suspense } from 'react'
-import dynamic from 'next/dynamic'
-
-const GarbageParticlesBackground = dynamic(() => import('@/components/3d/GarbageParticlesBackground'), { ssr: false })
-const CleaningWavesBackground = dynamic(() => import('@/components/3d/CleaningWavesBackground'), { ssr: false })
-const CityGridBackground = dynamic(() => import('@/components/3d/CityGridBackground'), { ssr: false })
+import { useState } from 'react'
+import GarbageParticlesBackground from '@/components/3d/GarbageParticlesBackground'
+import CleaningWavesBackground from '@/components/3d/CleaningWavesBackground'
+import CityGridBackground from '@/components/3d/CityGridBackground'
 
 export default function Demo3D() {
   const [currentBackground, setCurrentBackground] = useState<'garbage' | 'waves' | 'grid'>('garbage')
 
   return (
     <div className="min-h-screen bg-gradient-blue-light relative overflow-hidden">
-      <Suspense fallback={<div className="absolute inset-0 -z-10" />}>
-        {currentBackground === 'garbage' && <GarbageParticlesBackground />}
-        {currentBackground === 'waves' && <CleaningWavesBackground />}
-        {currentBackground === 'grid' && <CityGridBackground />}
-      </Suspense>
+      {currentBackground === 'garbage' &&<GarbageParticlesBackground />}
+      {currentBackground === 'waves' && <CleaningWavesBackground />}
+      {currentBackground === 'grid' && <CityGridBackground />}
 
-      <Suspense fallback={null}>
-        <div className="relative z-10 flex items-center justify-center min-h-screen">
+      <div className="relative z-10 flex items-center justify-center min-h-screen">
         <div className="bg-white/90 backdrop-blur-md p-12 rounded-3xl shadow-blue-lg max-w-2xl">
           <h1 className="text-4xl font-bold text-blue-dark mb-6 text-center">3D Animated Backgrounds</h1>
           <p className="text-blue-soft text-lg mb-8 text-center">
@@ -87,7 +82,6 @@ export default function Demo3D() {
           </div>
         </div>
       </div>
-      </Suspense>
     </div>
   )
 }
