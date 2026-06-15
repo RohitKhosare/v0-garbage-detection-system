@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { MapPin, FileText, CheckCircle, Clock } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default function CitizenDashboard() {
   const [user, setUser] = useState<any>(null)
   const [stats, setStats] = useState({ total: 0, pending: 0, resolved: 0, inProgress: 0 })

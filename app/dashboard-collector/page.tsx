@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { MapPin, CheckCircle, Navigation, Zap } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default function CollectorDashboard() {
   const [user, setUser] = useState<any>(null)
   const [stats, setStats] = useState({

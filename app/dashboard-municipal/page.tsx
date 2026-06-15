@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { BarChart3, MapPin, AlertTriangle, TrendingUp } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default function MunicipalDashboard() {
   const [user, setUser] = useState<any>(null)
   const [stats, setStats] = useState({
