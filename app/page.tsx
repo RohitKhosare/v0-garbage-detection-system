@@ -23,10 +23,11 @@ export default function HomePage() {
   }, [router, supabase])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-blue-light flex items-center justify-center">
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-gray-800">CleanCity AI</h1>
-        <p className="text-gray-600">Loading...</p>
+        <h1 className="text-5xl font-bold text-blue-dark">CleanCity AI</h1>
+        <p className="text-blue-soft text-lg">Smart Garbage Detection & Reporting System</p>
+        <p className="text-blue-light mt-8">Redirecting...</p>
       </div>
     </div>
   )
