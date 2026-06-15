@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { BarChart3, MapPin, AlertTriangle, TrendingUp } from 'lucide-react'
+import MunicipalHeader from '@/components/headers/MunicipalHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,20 +83,7 @@ export default function MunicipalDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-blue-600">CleanCity AI</h1>
-            <p className="text-sm text-gray-500">Municipal Coordinator</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-600">{user.email}</span>
-            <Button variant="outline" onClick={handleLogout}>
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <MunicipalHeader userEmail={user.email} onLogout={handleLogout} />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <h2 className="text-3xl font-bold mb-8">Municipal Operations Dashboard</h2>

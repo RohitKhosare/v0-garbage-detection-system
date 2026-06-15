@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { MapPin, FileText, CheckCircle, Clock } from 'lucide-react'
+import CitizenHeader from '@/components/headers/CitizenHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -78,20 +79,7 @@ export default function CitizenDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-green-600">CleanCity AI</h1>
-            <p className="text-sm text-gray-500">Garbage Reporter</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-600">{user.email}</span>
-            <Button variant="outline" onClick={handleLogout}>
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <CitizenHeader userEmail={user.email} onLogout={handleLogout} />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <h2 className="text-3xl font-bold mb-8">Your Reports Dashboard</h2>

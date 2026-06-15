@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { MapPin, CheckCircle, Navigation, Zap } from 'lucide-react'
+import CollectorHeader from '@/components/headers/CollectorHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,20 +83,7 @@ export default function CollectorDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-orange-600">CleanCity AI</h1>
-            <p className="text-sm text-gray-500">Garbage Collector</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-600">{user.email}</span>
-            <Button variant="outline" onClick={handleLogout}>
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <CollectorHeader userEmail={user.email} onLogout={handleLogout} />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <h2 className="text-3xl font-bold mb-8">Collection Tasks Dashboard</h2>
