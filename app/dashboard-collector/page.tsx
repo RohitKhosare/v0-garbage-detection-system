@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { MapPin, CheckCircle, Navigation, Zap, Clock, TrendingUp } from 'lucide-react'
 import CollectorHeader from '@/components/headers/CollectorHeader'
+import CleaningWavesBackground from '@/components/3d/CleaningWavesBackground'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,10 +68,11 @@ export default function CollectorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-blue-light">
+    <div className="min-h-screen bg-gradient-blue-light relative overflow-hidden">
+      <CleaningWavesBackground />
       <CollectorHeader userEmail={user.email} onLogout={handleLogout} />
 
-      <main className="max-w-7xl mx-auto px-4 py-12">
+      <main className="max-w-7xl mx-auto px-4 py-12 relative z-10">
         {/* Hero Banner */}
         <div className="mb-12 rounded-2xl overflow-hidden shadow-blue-lg">
           <div 

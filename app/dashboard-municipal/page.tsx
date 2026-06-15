@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { BarChart3, MapPin, AlertTriangle, TrendingUp, Users, Zap } from 'lucide-react'
 import MunicipalHeader from '@/components/headers/MunicipalHeader'
+import CityGridBackground from '@/components/3d/CityGridBackground'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,10 +70,11 @@ export default function MunicipalDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-blue-light">
+    <div className="min-h-screen bg-gradient-blue-light relative overflow-hidden">
+      <CityGridBackground />
       <MunicipalHeader userEmail={user.email} onLogout={handleLogout} />
 
-      <main className="max-w-7xl mx-auto px-4 py-12">
+      <main className="max-w-7xl mx-auto px-4 py-12 relative z-10">
         {/* Hero Banner */}
         <div className="mb-12 rounded-2xl overflow-hidden shadow-blue-lg">
           <div 

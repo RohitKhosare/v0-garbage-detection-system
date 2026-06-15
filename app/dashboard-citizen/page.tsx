@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { MapPin, FileText, CheckCircle, Clock, TrendingUp, Zap, Award } from 'lucide-react'
 import CitizenHeader from '@/components/headers/CitizenHeader'
+import GarbageParticlesBackground from '@/components/3d/GarbageParticlesBackground'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,10 +63,11 @@ export default function CitizenDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-blue-light">
+    <div className="min-h-screen bg-gradient-blue-light relative overflow-hidden">
+      <GarbageParticlesBackground />
       <CitizenHeader userEmail={user.email} onLogout={handleLogout} />
 
-      <main className="max-w-7xl mx-auto px-4 py-12">
+      <main className="max-w-7xl mx-auto px-4 py-12 relative z-10">
         {/* Hero Banner with Image */}
         <div className="mb-12 rounded-2xl overflow-hidden shadow-blue-lg">
           <div 
