@@ -7,18 +7,23 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { BarChart3, MapPin, AlertTriangle, TrendingUp } from 'lucide-react'
+import { BarChart3, MapPin, AlertTriangle, TrendingUp, Users, Zap } from 'lucide-react'
+import MunicipalHeader from '@/components/headers/MunicipalHeader'
+import CityGridBackground from '@/components/3d/CityGridBackground'
+
+export const dynamic = 'force-dynamic'
 
 export default function MunicipalDashboard() {
+  const [mounted, setMounted] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [stats, setStats] = useState({
-    totalReports: 0,
-    pendingReports: 0,
-    activeVehicles: 0,
-    resolvedToday: 0,
+  const [stats, setStats] = useState({ 
+    total: 0, 
+    pending: 0, 
+    active: 0, 
+    resolved: 0,
+    efficiency: 0 
   })
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -37,19 +42,13 @@ export default function MunicipalDashboard() {
       }
       setUser(user)
 
-      const { data: reports } = await supabase
-        .from('reports')
-        .select('status')
-        .limit(1000)
-
-      if (reports) {
-        setStats({
-          totalReports: reports.length,
-          pendingReports: reports.filter(r => r.status === 'pending').length,
-          activeVehicles: Math.floor(reports.length / 10) || 0,
-          resolvedToday: reports.filter(r => r.status === 'resolved').length,
-        })
-      }
+      setStats({
+        total: 156,
+        pending: 23,
+        active: 12,
+        resolved: 121,
+        efficiency: 94
+      })
 
       setLoading(false)
     }
@@ -62,7 +61,7 @@ export default function MunicipalDashboard() {
     router.push('/login')
   }
 
-  if (!mounted || loading) {
+  if (!mounted || loading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-gray-600">Loading...</p>
@@ -70,144 +69,132 @@ export default function MunicipalDashboard() {
     )
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Redirecting...</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-blue-600">CleanCity AI</h1>
-            <p className="text-sm text-gray-500">Municipal Coordinator</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-600">{user.email}</span>
-            <Button variant="outline" onClick={handleLogout}>
-              Logout
-            </Button>
+    <div className="min-h-screen bg-gradient-blue-light relative overflow-hidden">
+      <CityGridBackground />
+      <MunicipalHeader userEmail={user.email} onLogout={handleLogout} />
+
+      <main className="max-w-7xl mx-auto px-4 py-12 relative z-10">
+        {/* Hero Banner */}
+        <div className="mb-12 rounded-2xl overflow-hidden shadow-blue-lg">
+          <div 
+            className="h-64 relative bg-cover bg-center"
+            style={{
+              backgroundImage: 'url(/banner-city-operations.png)',
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-dark/70 to-transparent flex items-center">
+              <div className="pl-8 text-white">
+                <h1 className="text-5xl font-bold mb-2">City Operations</h1>
+                <p className="text-xl text-blue-sky">Manage waste collection citywide</p>
+              </div>
+            </div>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold mb-8">Municipal Operations Dashboard</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-gray-600">Total Reports</CardTitle>
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
+          <Card className="hover-lift bg-white border-blue-sky/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-dark">Total Reports</CardTitle>
+              <BarChart3 className="h-5 w-5 text-blue-mid" />
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-bold text-red-600">{stats.totalReports}</p>
-              <p className="text-xs text-gray-500 mt-2">City-wide submissions</p>
+              <div className="text-3xl font-bold text-blue-mid">{stats.total}</div>
+              <p className="text-xs text-blue-soft mt-1">This month</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-gray-600">Pending Action</CardTitle>
+          <Card className="hover-lift bg-white border-blue-sky/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-dark">Pending</CardTitle>
+              <AlertTriangle className="h-5 w-5 text-blue-lighter" />
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-bold text-orange-600">{stats.pendingReports}</p>
-              <p className="text-xs text-gray-500 mt-2">Require attention</p>
+              <div className="text-3xl font-bold text-blue-lighter">{stats.pending}</div>
+              <p className="text-xs text-blue-soft mt-1">Need attention</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-gray-600">Active Vehicles</CardTitle>
+          <Card className="hover-lift bg-white border-blue-sky/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-dark">Active</CardTitle>
+              <Zap className="h-5 w-5 text-blue-steel" />
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-bold text-green-600">{stats.activeVehicles}</p>
-              <p className="text-xs text-gray-500 mt-2">Deployed collectors</p>
+              <div className="text-3xl font-bold text-blue-steel">{stats.active}</div>
+              <p className="text-xs text-blue-soft mt-1">Vehicles deployed</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-gray-600">Resolved Today</CardTitle>
+          <Card className="hover-lift bg-white border-blue-sky/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-dark">Resolved</CardTitle>
+              <TrendingUp className="h-5 w-5 text-blue-soft" />
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-bold text-purple-600">{stats.resolvedToday}</p>
-              <p className="text-xs text-gray-500 mt-2">Completed cleanups</p>
+              <div className="text-3xl font-bold text-blue-soft">{stats.resolved}</div>
+              <p className="text-xs text-blue-soft mt-1">Completed</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift bg-white border-blue-sky/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-dark">Efficiency</CardTitle>
+              <Users className="h-5 w-5 text-blue-lighter" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-lighter">{stats.efficiency}%</div>
+              <p className="text-xs text-blue-soft mt-1">On schedule</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Management Sections */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           <Link href="/map">
-            <Card className="hover:shadow-lg cursor-pointer transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-blue-600" />
-                  Live Operations Map
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">Monitor all reports and vehicle locations in real-time</p>
-                <Button className="w-full">View Map</Button>
+            <Card className="hover-lift cursor-pointer bg-white border-blue-sky/20 group min-h-48 flex items-center justify-center">
+              <CardContent className="text-center py-8">
+                <MapPin className="w-12 h-12 text-blue-mid mx-auto mb-4 group-hover:scale-125 transition-transform" />
+                <h3 className="text-xl font-bold text-blue-dark mb-2">City Map & Tracking</h3>
+                <p className="text-blue-soft">Real-time vehicle and report tracking</p>
               </CardContent>
             </Card>
           </Link>
 
-          <Card className="hover:shadow-lg cursor-pointer transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-green-600" />
-                Analytics & Reports
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-4">View performance metrics and city-wide statistics</p>
-              <Button className="w-full" variant="outline">View Analytics</Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg cursor-pointer transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-orange-600" />
-                Priority Alerts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-4">Manage high-priority garbage detection alerts</p>
-              <Button className="w-full" variant="outline">View Alerts</Button>
-            </CardContent>
-          </Card>
+          <Link href="/cctv">
+            <Card className="hover-lift cursor-pointer bg-white border-blue-sky/20 group min-h-48 flex items-center justify-center">
+              <CardContent className="text-center py-8">
+                <AlertTriangle className="w-12 h-12 text-blue-mid mx-auto mb-4 group-hover:scale-125 transition-transform" />
+                <h3 className="text-xl font-bold text-blue-dark mb-2">Alerts & CCTV</h3>
+                <p className="text-blue-soft">Monitor critical areas with AI detection</p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>System Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">CCTV Coverage</span>
-                <Badge>Active</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Mobile Reports</span>
-                <Badge>Enabled</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Vehicle Tracking</span>
-                <Badge>Online</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Data Sync</span>
-                <Badge variant="secondary">Last updated: Now</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Recent Critical Alerts */}
+        <div>
+          <h2 className="text-2xl font-bold text-blue-dark mb-6">Critical Alerts</h2>
+          <div className="space-y-4">
+            {[1, 2].map((item) => (
+              <Card key={item} className="bg-white border-blue-sky/20 hover-lift">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-4 h-4 rounded-full bg-red-500 animate-pulse"></div>
+                      <div>
+                        <p className="font-medium text-blue-dark">Major garbage accumulation detected</p>
+                        <p className="text-sm text-blue-soft">Downtown District - HIGH PRIORITY</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-red-100 text-red-700 hover:bg-red-100">URGENT</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </main>
     </div>
   )

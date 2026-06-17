@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { AlertTriangle, MapPin, Truck, Camera, Search, RefreshCw } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 interface Location {
   id: string
   latitude: number

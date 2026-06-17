@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
+export const dynamic = 'force-dynamic'
+
 export default function ReportPage() {
   const [user, setUser] = useState<any>(null)
   const [location, setLocation] = useState('')

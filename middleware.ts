@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
 
   // Protect routes - redirect to login if not authenticated
-  const publicRoutes = ['/login', '/register']
+  const publicRoutes = ['/login', '/register', '/demo-3d']
   const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname === route)
 
   // If user is not authenticated and trying to access protected route
